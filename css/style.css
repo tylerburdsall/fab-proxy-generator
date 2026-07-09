@@ -179,7 +179,13 @@ select:focus, input:focus, textarea:focus {
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
 .btn.primary:hover { background: var(--accent-hover); }
 .btn.subtle { background: transparent; }
-.icon-btn { padding: 4px 11px; font-size: 28px; line-height: 1; }
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 11px;
+}
+.icon-btn svg { width: 24px; height: 24px; display: block; }
 
 /* ---- layout ---- */
 .layout {
@@ -474,16 +480,26 @@ textarea { resize: vertical; margin-bottom: 10px; }
 @media print {
   .no-print { display: none !important; }
   html, body { background: #fff; margin: 0; padding: 0; }
+  html { min-height: 0; }
   body { display: block; min-height: 0; }   /* undo screen flex layout */
 
+  /* Use block + inline-block rather than flexbox for the print sheet. Safari
+     mis-paginates flex containers in print (it was clipping the top row), and
+     inline-block flows and fragments reliably across all browsers.
+     - text-align:center centers each row horizontally
+     - font-size:0 removes the whitespace gaps between inline-block cards */
   .print-sheet {
-    display: flex;
-    flex-wrap: wrap;
-    /* Center cards on the page: horizontally always, and vertically for a
-       single page (min-height is injected per paper preset by app.js). */
-    justify-content: center;
-    align-content: center;
-    gap: 0;
+    display: block;
+    min-height: 0 !important;
+    text-align: center;
+    font-size: 0;
+    line-height: 0;
+  }
+  .print-card {
+    display: inline-block;
+    vertical-align: top;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   /* Keep the exact printed colors/artwork — no browser "ink saving". */
@@ -491,10 +507,12 @@ textarea { resize: vertical; margin-bottom: 10px; }
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  .print-card { break-inside: avoid; page-break-inside: avoid; }
 }
 
 /* NOTE: @page size/orientation cannot be scoped by a class selector, so the
    correct @page rule for the chosen paper preset is injected from JS into
-   the #pageStyle element (see setPaper() in app.js). A sensible default: */
-@page { size: letter landscape; margin: 6mm; }
+   the #pageStyle element (see setPaper() in app.js). A sensible default.
+   We deliberately omit `margin` here — declaring an @page margin breaks
+   Safari's print margins (see note in app.js). Browsers apply their own
+   default print margins instead. */
+@page { size: letter landscape; }
