@@ -22,10 +22,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout this repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Checkout source card database (English JSON only)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: the-fab-cube/flesh-and-blood-cards
           path: source
@@ -34,7 +34,7 @@ jobs:
           sparse-checkout-cone-mode: true
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: "20"
 
