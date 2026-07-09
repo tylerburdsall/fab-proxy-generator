@@ -357,7 +357,7 @@
         </div>
         <div class="qty">
           <button type="button" class="dec">–</button>
-          <input type="number" min="1" value="${it.qty}" class="qval" />
+          <input type="text" inputmode="numeric" pattern="[0-9]*" value="${it.qty}" class="qval" aria-label="Quantity" />
           <button type="button" class="inc">+</button>
         </div>
         <button type="button" class="del" title="Remove">✕</button>`;
