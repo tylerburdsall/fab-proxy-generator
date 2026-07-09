@@ -1,0 +1,482 @@
+/* =========================================================================
+   Flesh & Blood Proxy Maker
+   =========================================================================
+   The important part of this file is the @media print block. Real FaB cards
+   are standard poker/TCG size: 63mm x 88mm. To make them come out at the
+   correct real-world size when the user prints at 100% scale, every card is
+   sized in PHYSICAL units (mm) and page margins are controlled with @page.
+   Sizing in pixels is what makes most other sites print cards too small.
+   ========================================================================= */
+
+:root {
+  --card-w: 63mm;   /* real FaB card width  */
+  --card-h: 88mm;   /* real FaB card height */
+
+  --accent: #c8102e;        /* FaB red */
+  --accent-hover: #e01634;
+
+  /* Dark theme (default) */
+  --bg: #14161c;
+  --panel: #1e2230;
+  --panel-2: #262b3d;
+  --text: #e8eaf0;
+  --muted: #9aa3b8;
+  --border: #333a52;
+  --shadow: rgba(0, 0, 0, 0.5);
+}
+
+/* Light theme values, applied either by OS preference (when the user hasn't
+   chosen) or by an explicit data-theme="light". */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --bg: #f3f4f7;
+    --panel: #ffffff;
+    --panel-2: #eef0f4;
+    --text: #1a1d24;
+    --muted: #5a6273;
+    --border: #d8dce4;
+    --shadow: rgba(0, 0, 0, 0.18);
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f3f4f7;
+  --panel: #ffffff;
+  --panel-2: #eef0f4;
+  --text: #1a1d24;
+  --muted: #5a6273;
+  --border: #d8dce4;
+  --shadow: rgba(0, 0, 0, 0.18);
+}
+
+/* =========================================================================
+   Accessibility settings (toggled from the Settings modal; attributes are set
+   on <html> by app.js and by the early-apply script in index.html).
+   ========================================================================= */
+
+/* Color-blind friendly: swap the red accent (hard for red–green CVD) for a
+   high-visibility blue that stays distinct across common CVD types. */
+:root[data-cvd] { --accent: #1e88e5; --accent-hover: #42a5f5; }
+
+/* High contrast: strengthen text and borders in both themes. */
+:root[data-contrast="high"] {
+  --text: #ffffff; --muted: #d4dae8; --border: #8a94b6;
+  --panel: #161a24; --panel-2: #1f2536;
+}
+:root[data-contrast="high"][data-theme="light"] {
+  --text: #000000; --muted: #333a48; --border: #4a5169;
+  --panel: #ffffff; --panel-2: #e9ecf3;
+}
+
+/* Larger text: scale the root so rem-based sizes grow together. */
+:root[data-text="large"] { font-size: 20px; }
+
+/* Bold text for readability. */
+:root[data-bold] body { font-weight: 600; }
+
+/* Underline links so they aren't identified by color alone. */
+:root[data-underline] a { text-decoration: underline; }
+
+/* Reduce motion: turn off transitions/animations. */
+:root[data-motion="reduce"] *,
+:root[data-motion="reduce"] *::before,
+:root[data-motion="reduce"] *::after {
+  transition: none !important;
+  animation: none !important;
+  scroll-behavior: auto !important;
+}
+
+* { box-sizing: border-box; }
+
+html { min-height: 100%; font-size: 16px; }
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 1.03rem;   /* rem-based so "Larger text" scales body copy too */
+  line-height: 1.5;
+  /* Full-height flex column so the footer stays pinned to the bottom and the
+     main area grows to fill whatever space is left. */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1 { font-size: 1.25rem; margin: 0; }
+h2 { font-size: 1.05rem; margin: 0; }
+.muted { color: var(--muted); }
+.count { color: var(--muted); font-weight: 400; font-size: 0.9rem; }
+code { background: var(--panel-2); padding: 0 4px; border-radius: 4px; }
+
+/* ---- top bar ---- */
+.app-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+.toolbar { display: flex; align-items: center; gap: 12px; }
+.paper-select { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--muted); }
+select, input, textarea {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font: inherit;
+}
+/* Inset ring so the focus highlight is never clipped by the drawer's
+   overflow container (which was cutting off the top/left/right edges). */
+select:focus, input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* Search field with a clear (✕) button */
+.search-wrap { position: relative; }
+.search-wrap input[type="search"] { width: 100%; padding-right: 40px; }
+/* Hide the browser's native (low-contrast, tiny) clear button. */
+.search-wrap input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.clear-search {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.clear-search:hover { background: var(--accent); color: #fff; }
+.clear-search[hidden] { display: none; }
+
+/* ---- buttons ---- */
+.btn {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font: inherit;
+}
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn.primary:hover { background: var(--accent-hover); }
+.btn.subtle { background: transparent; }
+.icon-btn { padding: 8px 11px; font-size: 1.05rem; line-height: 1; }
+
+/* ---- layout ---- */
+.layout {
+  padding: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+  flex: 1 0 auto;   /* fill remaining height, pushing the footer down */
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+/* ---- tabs ---- */
+.tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+.tab {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 8px;
+  cursor: pointer;
+  font: inherit;
+}
+.tab.active { background: var(--panel-2); color: var(--text); border-color: var(--accent); }
+.tab-body.hidden { display: none; }
+.search-row input, textarea { width: 100%; }
+textarea { resize: vertical; margin-bottom: 10px; }
+
+/* ---- slide-out Add Cards drawer ---- */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 80;
+}
+.drawer-backdrop.open { opacity: 1; pointer-events: auto; }
+.drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: min(760px, 94vw);
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  box-shadow: -8px 0 30px var(--shadow);
+  transform: translateX(100%);
+  transition: transform 0.25s ease;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 18px;
+}
+.drawer.open { transform: translateX(0); }
+.drawer-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.drawer-head h2 { font-size: 1.2rem; }
+.drawer-body { overflow-y: auto; flex: 1; }
+
+/* ---- big search results grid ---- */
+.results {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+.result {
+  background: var(--panel-2);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+  transition: border-color 0.12s, transform 0.12s;
+}
+.result:hover { border-color: var(--accent); transform: translateY(-2px); }
+.result img.thumb {
+  width: 100%;
+  aspect-ratio: 63 / 88;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--panel);
+  display: block;
+}
+.result .name { font-weight: 600; margin-top: 8px; line-height: 1.25; }
+.result .sub { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+.result .badge {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 0.72rem;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+/* ---- print list (screen view) ---- */
+.list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.hint { font-size: 0.85rem; margin: 6px 0 14px; line-height: 1.4; }
+
+/* ---- printing tips ---- */
+.tips {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 6px 0 16px;
+}
+.tips > summary { cursor: pointer; font-weight: 600; }
+.tips-list { margin: 10px 0 6px; padding-left: 1.3em; }
+.tips-list li { margin: 6px 0; line-height: 1.45; }
+.tips-check { font-size: 0.9rem; margin: 8px 0 0; }
+
+/* ---- floating large-card hover preview ---- */
+.card-preview {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 390px;
+  aspect-ratio: 63 / 88;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 12px 44px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+  z-index: 200;
+}
+.card-preview.show { opacity: 1; }
+.print-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.pl-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.pl-item .thumb { width: 52px; height: 73px; object-fit: cover; border-radius: 4px; flex: none; }
+.pl-item .thumb.clickable { cursor: pointer; outline: 1px solid transparent; }
+.pl-item .thumb.clickable:hover { outline-color: var(--accent); }
+.pl-item .info { flex: 1; min-width: 0; }
+.pl-item .info .name { font-weight: 600; }
+.pl-item .sub .link { color: var(--accent); cursor: pointer; text-decoration: underline; }
+.qty { display: flex; align-items: center; gap: 6px; }
+.qty button { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--text); cursor: pointer; font-size: 1rem; }
+.qty input { width: 46px; text-align: center; padding: 4px; }
+.pl-item .del { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 1.2rem; padding: 4px 8px; }
+.pl-item .del:hover { color: var(--accent); }
+.empty-msg { text-align: center; padding: 32px 24px; }
+
+/* ---- version gallery modal (large art) ---- */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+.modal.hidden { display: none; }
+.modal-content {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: min(1100px, 100%);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 20px 20px;
+}
+.modal-head { display: flex; align-items: center; justify-content: space-between; }
+.modal-head h3 { margin: 0; font-size: 1.2rem; }
+.modal-close { background: transparent; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer; }
+.modal-close:hover { color: var(--accent); }
+.modal-hint { margin: 4px 0 16px; font-size: 0.9rem; }
+.version-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 18px;
+  overflow-y: auto;
+  padding: 2px;
+}
+.version-tile {
+  background: var(--panel-2);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text);
+  font: inherit;
+  transition: border-color 0.12s, transform 0.12s;
+}
+.version-tile:hover { border-color: var(--accent); transform: translateY(-2px); }
+.version-tile.selected { border-color: var(--accent); }
+.version-tile img { width: 100%; aspect-ratio: 63 / 88; object-fit: cover; border-radius: 8px; }
+.version-tile .ver-label { font-size: 0.9rem; text-align: center; }
+
+/* ---- settings modal ---- */
+.settings-content { width: min(560px, 100%); }
+.settings-list { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+.setting-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.setting-row:hover { background: var(--panel-2); }
+.setting-row input {
+  margin: 2px 0 0;
+  width: 20px;
+  height: 20px;
+  flex: none;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.setting-row .s-label { font-weight: 600; }
+.setting-row .s-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.35; }
+
+/* ---- footer ---- */
+.site-footer {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  border-top: 1px solid var(--border);
+}
+.site-footer a { color: var(--accent); }
+.site-footer .fine { font-size: 0.76rem; opacity: 0.85; margin-bottom: 0; }
+
+/* =========================================================================
+   PRINT SHEET  — hidden on screen, shown only when printing.
+   ========================================================================= */
+.print-sheet { display: none; }
+.print-card {
+  width: var(--card-w);
+  height: var(--card-h);
+  position: relative;
+  overflow: hidden;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.print-card img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--card-w);
+  height: var(--card-h);
+  transform: translate(-50%, -50%);
+}
+/* Rotations correct the stored image orientation to sit upright in the box.
+   For 90/270 the source art is landscape, so swap the dimensions first. */
+.print-card img.rot180 { transform: translate(-50%, -50%) rotate(180deg); }
+.print-card img.rot90,
+.print-card img.rot270 { width: var(--card-h); height: var(--card-w); }
+.print-card img.rot90  { transform: translate(-50%, -50%) rotate(90deg); }
+.print-card img.rot270 { transform: translate(-50%, -50%) rotate(270deg); }
+
+@media print {
+  .no-print { display: none !important; }
+  html, body { background: #fff; margin: 0; padding: 0; }
+  body { display: block; min-height: 0; }   /* undo screen flex layout */
+
+  .print-sheet {
+    display: flex;
+    flex-wrap: wrap;
+    /* Center cards on the page: horizontally always, and vertically for a
+       single page (min-height is injected per paper preset by app.js). */
+    justify-content: center;
+    align-content: center;
+    gap: 0;
+  }
+
+  /* Keep the exact printed colors/artwork — no browser "ink saving". */
+  .print-sheet, .print-card, .print-card img {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .print-card { break-inside: avoid; page-break-inside: avoid; }
+}
+
+/* NOTE: @page size/orientation cannot be scoped by a class selector, so the
+   correct @page rule for the chosen paper preset is injected from JS into
+   the #pageStyle element (see setPaper() in app.js). A sensible default: */
+@page { size: letter landscape; margin: 6mm; }

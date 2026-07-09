@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flesh &amp; Blood Proxy Maker</title>
+  <meta name="description" content="Print true-to-size Flesh and Blood proxy cards at home. Search, pick versions, and print at 100% scale for real card dimensions." />
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="stylesheet" href="css/style.css" />
+  <!-- @page rule for the selected paper preset is written here by app.js -->
+  <style id="pageStyle"></style>
+  <!-- Apply saved theme + accessibility settings before paint to avoid a flash -->
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const t = localStorage.getItem("theme");
+      if (t) root.setAttribute("data-theme", t);
+      const map = {
+        cvd: ["data-cvd", ""], contrast: ["data-contrast", "high"],
+        largeText: ["data-text", "large"], boldText: ["data-bold", ""],
+        underline: ["data-underline", ""], reduceMotion: ["data-motion", "reduce"],
+      };
+      try {
+        const s = JSON.parse(localStorage.getItem("a11y") || "{}");
+        for (const k in map) if (s[k]) root.setAttribute(map[k][0], map[k][1]);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <!-- ============ Top bar ============ -->
+  <header class="app-bar no-print">
+    <h1>Flesh &amp; Blood Proxy Maker</h1>
+    <div class="toolbar">
+      <button id="addCardsBtn" class="btn primary" type="button">＋ Add Cards</button>
+      <label class="paper-select">
+        Paper
+        <select id="paper">
+          <option value="letter-landscape" selected>Letter — Landscape (8/page)</option>
+          <option value="a4-portrait">A4 — Portrait (9/page)</option>
+          <option value="letter-portrait">Letter — Portrait (9/page)</option>
+          <option value="a4-landscape">A4 — Landscape (8/page)</option>
+        </select>
+      </label>
+      <button id="settingsBtn" class="btn icon-btn" type="button" title="Settings &amp; accessibility" aria-label="Settings and accessibility">⚙</button>
+      <button id="themeToggle" class="btn icon-btn" type="button" title="Toggle light / dark" aria-label="Toggle light / dark">☾</button>
+      <button id="printBtn" class="btn" type="button">Print</button>
+    </div>
+  </header>
+
+  <!-- ============ Main: print list ============ -->
+  <main class="layout no-print">
+    <section class="panel list-panel">
+      <details class="tips">
+        <summary>How to print at the correct real-life size</summary>
+        <ol class="tips-list">
+          <li>Choose your paper in the <strong>Paper</strong> menu at the top right, then click <strong>Print</strong>.</li>
+          <li>In your browser's print dialog, match the <strong>paper size and orientation</strong> to the option you picked (for example, Letter → Landscape, or A4 → Portrait).</li>
+          <li>Set <strong>Scale</strong> (sometimes labeled "Size") to <strong>100%</strong>. Do <em>not</em> use "Fit to page" or "Shrink to fit" — those resize the cards.</li>
+          <li>Set <strong>Margins</strong> to <strong>Default</strong> or <strong>Minimum</strong>.</li>
+          <li>If your print dialog has a <strong>"Background graphics"</strong> (or "Print backgrounds") checkbox, turn it on so the full card art prints. If you don't see this option, you can ignore it.</li>
+        </ol>
+        <p class="tips-check muted">To double-check: a printed card should measure <strong>63 × 88 mm</strong> (about 2.5 × 3.5 in). If it's slightly off, make sure the scale is exactly 100%.</p>
+      </details>
+
+      <div class="list-header">
+        <h2>Print list <span id="cardCount" class="count">(0 cards)</span></h2>
+        <button id="clearBtn" class="btn subtle" type="button">Clear all</button>
+      </div>
+      <ul id="printList" class="print-list"></ul>
+      <p id="emptyMsg" class="muted empty-msg">
+        No cards yet — click <strong>＋ Add Cards</strong> to search or paste a deck list.
+      </p>
+    </section>
+  </main>
+
+  <!-- ============ Footer credits ============ -->
+  <footer class="site-footer no-print">
+    <p>
+      <a href="https://github.com/tylerburdsall/fab-proxy-generator" target="_blank" rel="noopener">View the source or file an issue on GitHub</a>.
+    </p>
+    <p>
+      Card data &amp; images provided by the excellent open-source
+      <a href="https://github.com/the-fab-cube/flesh-and-blood-cards" target="_blank" rel="noopener">the-fab-cube / flesh-and-blood-cards</a>
+      repository.
+    </p>
+    <p class="fine">
+      This site is unofficial and not affiliated with or endorsed by Legend Story Studios®.
+      Flesh and Blood™, all card names, card text, artwork, logos, and set names are
+      trademarks and copyright © Legend Story Studios®. All rights reserved to their
+      respective owners. Proxies are for personal playtesting and casual use only.
+    </p>
+  </footer>
+
+  <!-- ============ Slide-out "Add Cards" drawer ============ -->
+  <div id="drawerBackdrop" class="drawer-backdrop no-print"></div>
+  <aside id="addDrawer" class="drawer no-print" aria-label="Add cards">
+    <div class="drawer-head">
+      <h2>Add Cards</h2>
+      <button id="drawerClose" class="modal-close" type="button" aria-label="Close">✕</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="search" type="button">Card Search</button>
+      <button class="tab" data-tab="deck" type="button">Deck List</button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="tab-body" data-body="search">
+        <div class="search-row">
+          <div class="search-wrap">
+            <input id="searchInput" type="search" placeholder="Search a card (min 2 characters)…" autocomplete="off" />
+            <button id="clearSearch" class="clear-search" type="button" aria-label="Clear search" hidden>✕</button>
+          </div>
+        </div>
+        <p id="searchStatus" class="muted">Loading card data…</p>
+        <div id="results" class="results"></div>
+      </div>
+
+      <div class="tab-body hidden" data-body="deck">
+        <p class="muted">Paste a deck list, one card per line. Works with fabdb / fabrary exports. You can use card names or set codes.</p>
+        <textarea id="deckInput" rows="12" placeholder="Command and Conquer&#10;3 Sink Below (red)&#10;WTR224&#10;Dyadic Carapace"></textarea>
+        <button id="addDeckBtn" class="btn primary" type="button">Add Cards</button>
+        <p id="deckStatus" class="muted"></p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ Settings / accessibility modal ============ -->
+  <div id="settingsModal" class="modal hidden no-print" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-content settings-content">
+      <div class="modal-head">
+        <h3 id="settingsTitle">Settings</h3>
+        <button id="settingsClose" class="modal-close" type="button" aria-label="Close">✕</button>
+      </div>
+      <p class="muted modal-hint">Accessibility options. Your choices are saved on this device.</p>
+      <div id="settingsList" class="settings-list"></div>
+    </div>
+  </div>
+
+  <!-- ============ Version gallery modal ============ -->
+  <div id="versionModal" class="modal hidden no-print" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content">
+      <div class="modal-head">
+        <h3 id="modalTitle"></h3>
+        <button id="modalClose" class="modal-close" type="button" aria-label="Close">✕</button>
+      </div>
+      <p class="muted modal-hint">Choose a version to add to your print list.</p>
+      <div id="modalGrid" class="version-grid"></div>
+    </div>
+  </div>
+
+  <!-- ============ Floating large-card hover preview ============ -->
+  <img id="cardPreview" class="card-preview no-print" alt="" aria-hidden="true" />
+
+  <!-- ============ Print sheet (the only thing that prints) ============ -->
+  <div id="printSheet" class="print-sheet" aria-hidden="true"></div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

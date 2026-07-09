@@ -1,0 +1,54 @@
+name: Update card data
+
+# Pulls the latest cards from the-fab-cube/flesh-and-blood-cards, rebuilds the
+# slim data/cards.min.json, and commits it if anything changed. The commit
+# triggers the "Deploy to Pages" workflow.
+
+# Manual-only: runs when you click "Run workflow" in the Actions tab.
+# workflow_dispatch requires write access to the repo, so only you (and any
+# collaborators you add) can trigger it — not the public.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-cards
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+
+      - name: Checkout source card database (English JSON only)
+        uses: actions/checkout@v4
+        with:
+          repository: the-fab-cube/flesh-and-blood-cards
+          path: source
+          sparse-checkout: |
+            json/english
+          sparse-checkout-cone-mode: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build slim card data
+        run: node scripts/build-data.mjs source data/cards.min.json
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- data/cards.min.json; then
+            echo "No card data changes."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/cards.min.json
+          git commit -m "chore: update card data from the-fab-cube ($(date -u +%Y-%m-%d))"
+          git push
