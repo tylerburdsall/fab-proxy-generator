@@ -195,6 +195,35 @@ select:focus, input:focus, textarea:focus {
   width: 100%;
   flex: 1 0 auto;   /* fill remaining height, pushing the footer down */
 }
+
+/* ---- responsive header / mobile ---- */
+@media (max-width: 720px) {
+  .app-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .app-bar h1 { font-size: 1.15rem; }
+
+  .toolbar {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  /* First row: Add Cards grows, then the two icons and Print stay compact.
+     Second row: the paper selector spans full width. */
+  #addCardsBtn { order: 1; flex: 1 1 auto; }
+  #settingsBtn { order: 2; }
+  #themeToggle { order: 3; }
+  #printBtn    { order: 4; }
+  .paper-select { order: 5; flex: 1 1 100%; }
+  .paper-select select { flex: 1; }
+
+  .layout { padding: 14px; }
+  .panel { padding: 14px; }
+  .site-footer { padding: 16px 14px; }
+}
 .panel {
   background: var(--panel);
   border: 1px solid var(--border);
