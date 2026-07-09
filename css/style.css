@@ -179,7 +179,7 @@ select:focus, input:focus, textarea:focus {
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
 .btn.primary:hover { background: var(--accent-hover); }
 .btn.subtle { background: transparent; }
-.icon-btn { padding: 8px 11px; font-size: 1.05rem; line-height: 1; }
+.icon-btn { padding: 4px 11px; font-size: 28px; line-height: 1; }
 
 /* ---- layout ---- */
 .layout {
@@ -333,8 +333,26 @@ textarea { resize: vertical; margin-bottom: 10px; }
 .qty { display: flex; align-items: center; gap: 6px; }
 .qty button { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--text); cursor: pointer; font-size: 1rem; }
 .qty input { width: 46px; text-align: center; padding: 4px; }
-.pl-item .del { border: none; background: transparent; color: var(--muted); cursor: pointer; font-size: 1.2rem; padding: 4px 8px; }
-.pl-item .del:hover { color: var(--accent); }
+/* Hide the native number spinner arrows (we use the – / + buttons instead). */
+.qty input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+.qty input[type="number"]::-webkit-outer-spin-button,
+.qty input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.pl-item .del {
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.pl-item .del:hover { background: var(--accent-hover); }
 .empty-msg { text-align: center; padding: 32px 24px; }
 
 /* ---- version gallery modal (large art) ---- */
