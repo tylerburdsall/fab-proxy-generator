@@ -13,11 +13,16 @@
   // `printH` -> printable height (paper height - 2*margin) in mm, used to
   //             vertically center a single page while leaving multi-page
   //             sheets packed from the top.
+  // NOTE: we intentionally set only `size` (orientation), not `margin`.
+  // Declaring an @page margin breaks Safari — it disables Safari's own default
+  // print margins and then doesn't apply the value, so content clips at the top
+  // edge. Letting each browser use its normal (non-zero) print margins works
+  // everywhere and gives correct per-page margins on multi-page sheets.
   const PAPER = {
-    "letter-landscape": { page: "size: letter landscape; margin: 6mm;", printH: 203.9, perPage: 8 },
-    "a4-portrait":      { page: "size: A4 portrait; margin: 4mm;",       printH: 289.0, perPage: 9 },
-    "letter-portrait":  { page: "size: letter portrait; margin: 6mm;",   printH: 267.4, perPage: 9 },
-    "a4-landscape":     { page: "size: A4 landscape; margin: 6mm;",      printH: 198.0, perPage: 8 },
+    "letter-landscape": { page: "size: letter landscape;", perPage: 8 },
+    "a4-portrait":      { page: "size: A4 portrait;",       perPage: 9 },
+    "letter-portrait":  { page: "size: letter portrait;",   perPage: 9 },
+    "a4-landscape":     { page: "size: A4 landscape;",      perPage: 8 },
   };
   let paperValue = "letter-landscape";
 
@@ -133,9 +138,20 @@
     if (forced) return forced;
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   }
+  const SUN_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<circle cx="12" cy="12" r="5"></circle>' +
+    '<line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line>' +
+    '<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>' +
+    '<line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line>' +
+    '<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>';
+  const MOON_SVG =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+
   function updateThemeIcon() {
     // Show the icon for the mode you'll switch TO.
-    themeToggle.textContent = effectiveTheme() === "dark" ? "☀" : "☾";
+    themeToggle.innerHTML = effectiveTheme() === "dark" ? SUN_SVG : MOON_SVG;
   }
   function toggleTheme() {
     const next = effectiveTheme() === "dark" ? "light" : "dark";
@@ -148,9 +164,11 @@
   function setPaper(value) {
     paperValue = PAPER[value] ? value : "letter-landscape";
     const preset = PAPER[paperValue];
-    pageStyle.textContent =
-      `@page { ${preset.page} }\n` +
-      `@media print { .print-sheet { min-height: ${preset.printH}mm; } }`;
+    // Only set the @page rule. We deliberately do NOT force a full-page
+    // min-height on the sheet: that vertically centered a single page in
+    // Chrome but made Firefox/Safari round past the printable area and emit a
+    // blank trailing page. Cards are top-aligned and horizontally centered.
+    pageStyle.textContent = `@page { ${preset.page} }`;
     updateCount();
   }
 
