@@ -53,6 +53,14 @@ git clone --depth 1 https://github.com/the-fab-cube/flesh-and-blood-cards source
 node scripts/build-data.mjs source data/cards.min.json
 ```
 
+Add `--update-banner` to also rewrite the announcement banner in `index.html`
+with whichever sets were just added (this is what the `Update card data`
+workflow runs):
+
+```bash
+node scripts/build-data.mjs source data/cards.min.json --update-banner
+```
+
 ## License
 
 The source code in this repository is released under the [MIT License](LICENSE).

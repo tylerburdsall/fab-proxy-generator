@@ -15,6 +15,11 @@
   --accent: #c8102e;        /* FaB red */
   --accent-hover: #e01634;
 
+  /* Announcement banner — a positive teal-green, so news doesn't read as an
+     error the way a big red bar does. */
+  --banner-bg: #0f766e;
+  --banner-fg: #ffffff;
+
   /* Dark theme (default) */
   --bg: #14161c;
   --panel: #1e2230;
@@ -54,8 +59,13 @@
    ========================================================================= */
 
 /* Color-blind friendly: swap the red accent (hard for red–green CVD) for a
-   high-visibility blue that stays distinct across common CVD types. */
-:root[data-cvd] { --accent: #1e88e5; --accent-hover: #42a5f5; }
+   high-visibility blue that stays distinct across common CVD types. The
+   banner also goes blue, since teal-green can read as grey with some CVD. */
+:root[data-cvd] {
+  --accent: #1e88e5;
+  --accent-hover: #42a5f5;
+  --banner-bg: #1565c0;
+}
 
 /* High contrast: strengthen text and borders in both themes. */
 :root[data-contrast="high"] {
@@ -108,6 +118,43 @@ h2 { font-size: 1.05rem; margin: 0; }
 .muted { color: var(--muted); }
 .count { color: var(--muted); font-weight: 400; font-size: 0.9rem; }
 code { background: var(--panel-2); padding: 0 4px; border-radius: 4px; }
+
+/* ---- announcement banner ---- */
+.announcement {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  background: var(--banner-bg);
+  color: var(--banner-fg);
+  font-size: 0.92rem;
+}
+.announcement[hidden] { display: none; }
+.ann-tag {
+  flex: none;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.ann-text { margin: 0; flex: 1; line-height: 1.4; }
+.ann-text a { color: var(--banner-fg); text-decoration: underline; }
+.ann-close {
+  flex: none;
+  background: transparent;
+  border: none;
+  color: var(--banner-fg);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  opacity: 0.85;
+}
+.ann-close:hover { background: rgba(255, 255, 255, 0.18); opacity: 1; }
 
 /* ---- top bar ---- */
 .app-bar {
@@ -223,6 +270,9 @@ select:focus, input:focus, textarea:focus {
   .layout { padding: 14px; }
   .panel { padding: 14px; }
   .site-footer { padding: 16px 14px; }
+
+  .announcement { padding: 10px 14px; gap: 10px; font-size: 0.86rem; align-items: flex-start; }
+  .ann-tag { margin-top: 1px; }
 }
 .panel {
   background: var(--panel);
