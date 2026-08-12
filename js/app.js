@@ -84,6 +84,23 @@
     imgEl.addEventListener("mouseleave", () => preview.classList.remove("show"));
   }
 
+  // ---- announcement banner --------------------------------------------
+  // Dismissal is remembered per data-id, so changing the id in index.html
+  // re-shows the banner to everyone (including people who dismissed the last).
+  function initAnnouncement() {
+    const bar = el("announcement");
+    if (!bar) return;
+    const id = bar.dataset.id || "default";
+    if (localStorage.getItem("annDismissed") === id) {
+      bar.hidden = true;
+      return;
+    }
+    el("announcementClose").addEventListener("click", () => {
+      bar.hidden = true;
+      localStorage.setItem("annDismissed", id);
+    });
+  }
+
   // ---- accessibility settings -----------------------------------------
   // Each option maps to an attribute on <html>. The same map is mirrored in the
   // early-apply script in index.html (to avoid a flash before this JS runs).
@@ -435,6 +452,7 @@
   function closeSettings() { el("settingsModal").classList.add("hidden"); }
 
   function init() {
+    initAnnouncement();
     loadA11y();
     applyA11y();
     updateThemeIcon();
