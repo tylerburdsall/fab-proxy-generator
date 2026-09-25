@@ -43,8 +43,21 @@ const artVariationNames = Object.fromEntries(
   loadJson("art-variation.json").map((a) => [a.id, a.name])
 );
 
+// Names for sets the source still lists under a placeholder ("??? Set 20 ???"),
+// e.g. when building from a pre-release branch. Upstream's real name wins once set.
+// TODO: delete the IAR entry once upstream names the set on main.
+const SET_NAME_OVERRIDES = { IAR: "Usurp the Shadow Throne" };
+
+// Placeholder names the source uses for unannounced sets.
+const PLACEHOLDER_SET_NAME = /^\?+|\?\?\?/;
+
 // set id -> friendly name ("MPW" -> "Mastery Pack Warrior")
-const setNames = Object.fromEntries(loadJson("set.json").map((s) => [s.id, s.name]));
+const setNames = Object.fromEntries(
+  loadJson("set.json").map((s) => [
+    s.id,
+    (PLACEHOLDER_SET_NAME.test(s.name) && SET_NAME_OVERRIDES[s.id]) || s.name,
+  ])
+);
 
 const cards = loadJson("card.json");
 
@@ -67,16 +80,19 @@ function versionLabel(printing) {
 const out = [];
 
 for (const card of cards) {
-  const versionsByImage = new Map();
+  const versionsByKey = new Map();
 
   for (const p of card.printings || []) {
     const url = p.image_url;
     if (!url) continue; // skip printings with no artwork
-    // De-duplicate by image: foil variants usually share the same artwork.
-    if (versionsByImage.has(url)) continue;
-    versionsByImage.set(url, {
+    // De-duplicate by printing + label: foil variants share the same artwork
+    // but have their own image URLs (e.g. MST131.webp vs MST131-RF.webp).
+    const label = versionLabel(p);
+    const key = `${p.id}|${label}`;
+    if (versionsByKey.has(key)) continue;
+    versionsByKey.set(key, {
       u: url,
-      l: versionLabel(p),
+      l: label,
       // printing / collector code, e.g. "WTR054", "GEM149"
       id: p.id || "",
       // rotation needed to display the stored image upright (0/90/180/270)
@@ -86,7 +102,7 @@ for (const card of cards) {
     });
   }
 
-  const versions = [...versionsByImage.values()];
+  const versions = [...versionsByKey.values()];
   if (!versions.length) continue; // nothing printable
 
   // Base printings first, then the rest in stable order.
@@ -143,8 +159,7 @@ function summarize() {
   const ranked = [...counts.entries()]
     .sort((a, b) => b[1] - a[1])
     .map(([code]) => setNames[code] || code)
-    // Skip placeholder names the source uses for unannounced sets.
-    .filter((name) => !/^\?+|\?\?\?/.test(name));
+    .filter((name) => !PLACEHOLDER_SET_NAME.test(name));
 
   return { newCards: newCards.length, newVersionCount, setNames: ranked };
 }

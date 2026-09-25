@@ -5,6 +5,23 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-09-25
+
+### Added
+
+- Usurp the Shadow Throne (IAR) cards, plus Armory Deck - Malice (AMA) and other
+  new printings — 252 new cards, 463 new versions. Pulled from the upstream
+  `usurp-the-shadow-throne` branch ahead of its merge to `main`.
+
+### Changed
+
+- Most card images are now served as `.webp` from Legend Story, following the
+  upstream database.
+- Foil printings no longer show up as duplicate versions now that upstream gives
+  each foil its own image URL.
+- `build-data.mjs` can name sets that upstream still lists under a placeholder
+  (currently Usurp the Shadow Throne), so the banner announces them.
+
 ## [0.2.0] - 2026-08-12
 
 ### Added
